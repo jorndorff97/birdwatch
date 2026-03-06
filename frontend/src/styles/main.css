@@ -1,0 +1,387 @@
+/* ── Variables ── */
+:root {
+  --forest: #0d1a0d;
+  --midnight: #0d1b2a;
+  --amber: #d4a017;
+  --amber-light: #e8b84b;
+  --cream: #f5ede0;
+  --cream-dim: rgba(245, 237, 224, 0.7);
+  --glass-bg: rgba(13, 40, 20, 0.45);
+  --glass-border: rgba(100, 180, 100, 0.18);
+  --green-glow: rgba(80, 200, 80, 0.12);
+  --red-pulse: #e05252;
+  --confidence-green: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--forest);
+  color: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* ── Firefly background ── */
+.fireflies {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 6px 2px var(--amber), 0 0 12px 4px rgba(212, 160, 23, 0.4);
+  animation: float var(--dur, 8s) ease-in-out infinite, glow 2s ease-in-out infinite alternate;
+  opacity: 0;
+}
+
+@keyframes float {
+  0%   { transform: translate(0, 0);           opacity: 0; }
+  10%  { opacity: 0.9; }
+  50%  { transform: translate(var(--dx, 40px), var(--dy, -60px)); opacity: 0.6; }
+  90%  { opacity: 0.8; }
+  100% { transform: translate(var(--dx2, -20px), var(--dy2, 40px)); opacity: 0; }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 4px 1px var(--amber); }
+  to   { box-shadow: 0 0 10px 4px rgba(212, 160, 23, 0.7); }
+}
+
+/* ── Layout ── */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem 4rem;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.app-header h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  color: var(--amber);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 30px rgba(212, 160, 23, 0.4);
+}
+
+.app-header p {
+  margin-top: 0.5rem;
+  color: var(--cream-dim);
+  font-weight: 300;
+  font-size: 1.05rem;
+}
+
+/* ── Glass card ── */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* ── Recorder ── */
+.recorder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 480px;
+}
+
+.mic-btn {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: radial-gradient(circle at 35% 35%, #3a7a3a, #1a4a1a);
+  box-shadow: 0 0 0 0 rgba(80, 200, 80, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.mic-btn:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 20px 6px rgba(80, 200, 80, 0.25);
+}
+
+.mic-btn.recording {
+  background: radial-gradient(circle at 35% 35%, #b04040, #6a1a1a);
+  animation: pulse-ring 1.2s ease-out infinite;
+}
+
+.mic-btn svg {
+  width: 44px;
+  height: 44px;
+  fill: var(--cream);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(224, 82, 82, 0.7); }
+  70%  { box-shadow: 0 0 0 22px rgba(224, 82, 82, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(224, 82, 82, 0); }
+}
+
+.timer {
+  font-family: 'Inter', monospace;
+  font-size: 1.3rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--cream-dim);
+}
+
+.timer.recording {
+  color: var(--red-pulse);
+}
+
+.rec-hint {
+  font-size: 0.85rem;
+  color: rgba(245, 237, 224, 0.45);
+  text-align: center;
+}
+
+/* ── Waveform canvas ── */
+.waveform-canvas {
+  width: 100%;
+  max-width: 440px;
+  height: 70px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+}
+
+/* ── Loading animation ── */
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 2rem 0;
+}
+
+.bird-fly {
+  font-size: 2.8rem;
+  animation: bird-across 2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 2px 8px rgba(212,160,23,0.5));
+}
+
+@keyframes bird-across {
+  from { transform: translateX(-30px) scaleX(1); }
+  to   { transform: translateX(30px) scaleX(1); }
+}
+
+.loading-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--cream-dim);
+  animation: fade-pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes fade-pulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+/* ── Bird result card ── */
+.result-card {
+  width: 100%;
+  max-width: 520px;
+  animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bird-image-wrap {
+  width: 100%;
+  height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 1.2rem;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bird-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.bird-image-placeholder {
+  font-size: 5rem;
+  opacity: 0.4;
+}
+
+.bird-name {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: var(--amber);
+  margin-bottom: 0.2rem;
+}
+
+.bird-scientific {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--cream-dim);
+  margin-bottom: 1rem;
+}
+
+.confidence-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 237, 224, 0.5);
+  margin-bottom: 0.4rem;
+}
+
+.confidence-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.confidence-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--confidence-green);
+  animation: bar-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left;
+}
+
+@keyframes bar-grow {
+  from { width: 0 !important; }
+}
+
+.alternatives {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.alternatives h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 237, 224, 0.4);
+  margin-bottom: 0.6rem;
+}
+
+.alt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  padding: 0.3rem 0;
+  color: var(--cream-dim);
+}
+
+.alt-confidence {
+  font-size: 0.8rem;
+  color: rgba(245, 237, 224, 0.4);
+}
+
+/* ── Bird details expand ── */
+.details-toggle {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  background: rgba(80, 160, 80, 0.15);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--cream);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+
+.details-toggle:hover {
+  background: rgba(80, 160, 80, 0.25);
+}
+
+.details-panel {
+  margin-top: 0.8rem;
+  animation: slide-up 0.35s ease both;
+}
+
+.details-description {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--cream-dim);
+  margin-bottom: 1rem;
+}
+
+.wiki-link {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--amber);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(212, 160, 23, 0.3);
+  transition: border-color 0.2s;
+}
+
+.wiki-link:hover {
+  border-color: var(--amber);
+}
+
+/* ── New recording button ── */
+.new-recording-btn {
+  margin-top: 1.5rem;
+  padding: 0.75rem 2rem;
+  background: transparent;
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  border-radius: 100px;
+  color: var(--amber);
+  font-size: 0.9rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.new-recording-btn:hover {
+  background: rgba(212, 160, 23, 0.1);
+  border-color: var(--amber);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212, 160, 23, 0.3); border-radius: 3px; }
