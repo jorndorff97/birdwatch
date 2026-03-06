@@ -7,19 +7,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && apt-get install -y nodejs \
   && rm -rf /var/lib/apt/lists/*
 
-# Install birdnet-analyzer (downloads model weights on first run)
+# Install birdnet-analyzer + pre-download the 224MB model
 RUN pip install --no-cache-dir birdnet-analyzer
-
-# Pre-download the BirdNET model so first request isn't slow
 RUN ffmpeg -f lavfi -i anullsrc=r=48000:cl=mono -t 3 /tmp/warmup.wav -y 2>/dev/null \
   && python3 -m birdnet_analyzer.analyze /tmp/warmup.wav -o /tmp/warmup_out/ --rtype csv --min_conf 0.5 2>/dev/null || true \
   && rm -rf /tmp/warmup.wav /tmp/warmup_out/
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --omit=dev
 
-COPY . .
+# Build frontend
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install
+COPY frontend/ ./frontend/
+RUN cd frontend && npm run build
+
+# Install backend deps
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install --omit=dev
+COPY backend/ ./backend/
 
 EXPOSE 3001
-CMD ["node", "server.js"]
+CMD ["node", "backend/server.js"]

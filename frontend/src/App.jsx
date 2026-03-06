@@ -30,8 +30,7 @@ export default function App() {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
 
-      const API_BASE = import.meta.env.VITE_API_BASE || '';
-      const response = await fetch(`${API_BASE}/api/identify`, {
+      const response = await fetch('/api/identify', {
         method: 'POST',
         body: formData,
       });
