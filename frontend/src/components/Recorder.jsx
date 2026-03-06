@@ -58,7 +58,14 @@ export default function Recorder({ isRecording, onStart, onStop }) {
 
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          sampleRate: 48000,
+        },
+      });
     } catch {
       alert('Microphone access denied. Please allow microphone permission and try again.');
       return;
@@ -73,7 +80,16 @@ export default function Recorder({ isRecording, onStart, onStop }) {
     source.connect(analyser);
     setAnalyserNode(analyser);
 
-    const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    // Pick best supported format — iOS Safari only supports mp4, not webm
+    const mimeType = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg',
+      '',
+    ].find((t) => t === '' || MediaRecorder.isTypeSupported(t));
+
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
     mediaRecorderRef.current = recorder;
 
     recorder.ondataavailable = (e) => {
@@ -82,7 +98,7 @@ export default function Recorder({ isRecording, onStart, onStop }) {
 
     recorder.onstop = () => {
       stream.getTracks().forEach((t) => t.stop());
-      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
       onStop(blob);
     };
 

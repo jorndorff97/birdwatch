@@ -27,7 +27,7 @@ async function runBirdNET(wavPath) {
 
   try {
     await execAsync(
-      `python3.13 -m birdnet_analyzer.analyze "${wavPath}" -o "${outDir}" --rtype csv --min_conf 0.1`,
+      `python3 -m birdnet_analyzer.analyze "${wavPath}" -o "${outDir}" --rtype csv --min_conf 0.03`,
       { timeout: 120_000 }
     );
   } catch (err) {
